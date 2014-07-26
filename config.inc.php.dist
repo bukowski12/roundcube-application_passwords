@@ -7,26 +7,30 @@ $config['application_passwords_db_dsn'] = 'mysql://user:password@localhost/table
 
 // The SQL queries used to manage application-specific passwords.
 // The query can contain the following macros that will be expanded as follows:
+//      %a is replaced with the application name
+//      %i is replaced with the application id
 //      %p is replaced with the plaintext new password
-//      %c is replaced with the crypt version of the new password, MD5 if available
-//         otherwise DES. More hash function can be enabled using the password_crypt_hash 
-//         configuration parameter.
-//      %D is replaced with the dovecotpw-crypted version of the new password
-//      %n is replaced with the hashed version of the new password
+// 		%s is replaced with the plaintext (hex) new password salt
 //      %u is replaced with the username (from the session info)
 //      %l is replaced with the local part of the username
 //         (in case the username is an email address)
 //      %d is replaced with the domain part of the username
 //         (in case the username is an email address)
 
+// Sample CREATE statement
+// CREATE TABLE app_password (app_id int NOT NULL AUTO_INCREMENT KEY, application varchar(100) NOT NULL, username varchar(100) NOT NULL, domain varchar(100) NOT NULL, salt varchar(16) NULL, password varchar(100) NULL, created datetime);
+
+// Sample Dovecot password query:
+// password_query = SELECT username, domain, NULL AS password, 'Y' as nopassword FROM app_password WHERE username = '%n' AND password = SHA2(salt+REPLACE('%w',' ',''),"512")
+
 // SQL query for displaying list of applications for which a password is set
-$config['application_passwords_select_query'] = 'SELECT application, created FROM vmail.applications WHERE username=%l AND domain=%d';
+$config['application_passwords_select_query'] = 'SELECT app_id, application, created FROM app_password WHERE username=%l AND domain=%d';
 
 // SQL query for storing new application-specific password
-$config['application_passwords_insert_query'] = 'INSERT INTO vmail.applications (username, domain, application, password) VALUES (%l, %d, %a, SHA2(%p,"512"))';
+$config['application_passwords_insert_query'] = 'INSERT INTO app_password (username, domain, application, salt, password, created) VALUES (%l, %d, %a, %s, SHA2(%s+%p,"256"), now())';
 
 // SQL query for deleting an application-specific password
-$config['application_passwords_delete_query'] = 'DELETE FROM vmail.applications WHERE username=%l AND domain=%d AND application=%a';
+$config['application_passwords_delete_query'] = 'DELETE FROM app_password WHERE username=%l AND domain=%d AND app_id=%i';
 
 // By default the crypt() function which is used to create the '%c' 
 // parameter uses the md5 algorithm. To use different algorithms 

@@ -11,7 +11,7 @@ $labels['create_password'] = 'Generate passsword';
 
 // Used in step 2 when creating new password
 $labels['new_application_step2_legend'] = 'Step 2 of 2: Enter the generated application-specific password';
-$labels['new_application_step2_description'] = 'You may now enter your new application-specific password into your application. Note that this password grants complete access to your email account. For security reasons, it will not be displayed again:';
+$labels['new_application_step2_description'] = 'You may now enter your new application-specific password into your application. Note that this password grants complete access to your email account. For security reasons, it will not be displayed again. Entering the spaces in the password is optional.';
 
 // Used in listing of existing passwords
 $labels['existing_application_passwords'] = 'Existing Passwords';
