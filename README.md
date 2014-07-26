@@ -52,7 +52,7 @@ Enable the plugin in Roundcube's config.inc.php:
 $config['plugins'] = array('application_passwords',''markasjunk','attachment_reminder','vcard_attachments');
 ```
 
-Configure Dovecot to Validate App Passwords
+Configure a Dovecot Authentcation database to validate passwords.
 
 ```
 # Database driver: mysql, pgsql, sqlite
@@ -62,7 +62,7 @@ default_pass_scheme = PLAIN
 password_query = SELECT username, NULL AS password, 'Y' as nopassword FROM app_password WHERE username = '%n' AND password = SHA2(salt+'%w',"512")
 ```
 
-See http://wiki.dovecot.org/AuthDatabase/SQL for more information on Dovecot Auth Databases.
+See http://wiki.dovecot.org/AuthDatabase/SQL for more information on Dovecot Authentication Databases.
 
 Notes
 -----
