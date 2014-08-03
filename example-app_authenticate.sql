@@ -36,15 +36,15 @@ BEGIN
     IF (MatchUser_ID IS NOT NULL) THEN 
     
 		IF NOT EXISTS(SELECT * FROM app_user WHERE user_id = MatchUser_ID) THEN
-			INSERT INTO app_user (user_id, badPasswordCount, isLockedOut) 
+			INSERT INTO app_user (user_id, badpasswordcount, islockedout) 
 			VALUES(MatchUser_ID, 0, 0);
 		END IF;
 	
-        #reset bad password account if it's been long enough
+        #reset bad password account if it has been long enough
         UPDATE	app_user
-        SET		badPasswordCount = 0            
+        SET		badpasswordcount = 0            
         WHERE   user_id = MatchUser_ID
-                AND TIMESTAMPDIFF(MINUTE, badPasswordDateTime, UTC_TIMESTAMP()) 
+                AND TIMESTAMPDIFF(MINUTE, lastbadpassword, UTC_TIMESTAMP()) 
                     > vResetBadPasswordCountAfter;
 
         #check if the password matches any UserPassword record
@@ -52,7 +52,7 @@ BEGIN
         FROM 	app_user au
 				INNER JOIN app_password ap ON ap.user_id = au.user_id
         WHERE	au.user_id = MatchUser_ID
-                AND (au.isLockedOut = 0 OR TIMESTAMPDIFF(MINUTE, au.BadPasswordDateTime, UTC_TIMESTAMP()) > vLockoutDuration)
+                AND (au.islockedout = 0 OR TIMESTAMPDIFF(MINUTE, au.lastbadpassword, UTC_TIMESTAMP()) > vLockoutDuration)
 		        AND (ap.password = SHA2(CONCAT(vPassword,ap.salt), '256'))
         INTO MatchApp_ID;
 
@@ -61,40 +61,40 @@ BEGIN
            
 			#incr account lockout
             UPDATE  app_user
-            SET		badPasswordDateTime = UTC_TIMESTAMP(),
-                    badPasswordCount = badPasswordCount + 1
+            SET		lastbadpassword = UTC_TIMESTAMP(),
+                    badpasswordcount = badpasswordcount + 1
             WHERE   user_id = MatchUser_ID;
 			
 			#lockout account after too many bad password attempts
 			UPDATE 	app_user
-			SET		isLockedOut = 1
+			SET		islockedout = 1
             WHERE   user_id = MatchUser_ID
-                    AND isLockedOut = 0
-					AND badPasswordCount >= vMaxPasswordAttempts;
+                    AND islockedout = 0
+					AND badpasswordcount >= vMaxPasswordAttempts;
 
-			INSERT INTO `app_log` (logdatetime,username,user_id,service,remoteAddress,message)
+			INSERT INTO `app_log` (logdatetime,username,user_id,service,remoteaddress,message)
 			VALUES(UTC_TIMESTAMP(), vUsername, MatchUser_ID, vService, vRemoteAddress, 'Bad password.');
 
         #else if the password is correct, and the user is matched
         ELSEIF (MatchApp_ID > 0 AND MatchUser_ID > 0) THEN            
             #clear the lockout flag and set the last login date time if the login was successful         
             UPDATE 	app_user
-            SET		isLockedOut = 0,
-                    lastLoginDateTime = UTC_TIMESTAMP()
+            SET		islockedout = 0,
+                    lastlogin = UTC_TIMESTAMP()
             WHERE 	user_id = MatchUser_ID;                
             
             # update the last used date on UserPassword
             UPDATE  app_password
-            SET     lastUsedDateTime = UTC_TIMESTAMP(),
-					lastRemoteAddress = vRemoteAddress
+            SET     lastlogin = UTC_TIMESTAMP(),
+					lastaddress = vRemoteAddress
             WHERE   app_id = MatchApp_ID;
 
-			INSERT INTO `app_log` (logdatetime,username,user_id,service,remoteAddress,message)
+			INSERT INTO `app_log` (logdatetime,username,user_id,service,remoteaddress,message)
 			VALUES(UTC_TIMESTAMP(), vUsername, MatchUser_ID, vService, vRemoteAddress, 'Logged in');
 		END IF;
 
     ELSE
-		INSERT INTO `app_log` (logdatetime,username,user_id,service,remoteAddress,message)
+		INSERT INTO `app_log` (logdatetime,username,user_id,service,remoteaddress,message)
 		VALUES(UTC_TIMESTAMP(), vUsername, MatchUser_ID, vService, vRemoteAddress, 'Bad username.');
 	END IF;
 

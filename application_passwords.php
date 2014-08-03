@@ -106,13 +106,13 @@ class application_passwords extends rcube_plugin
         foreach ($applications as $application)
         {
 			$onclick='';
-			if ($application['lastUsedDateTime']){
+			if ($application['lastlogin']){
 				$onclick = 'return confirm("'.$this->gettext('delete_warning').'")';
 			}
             $link_delete = html::tag('a', array('onclick'=>$onclick,'href' => '?_task=settings&_action=plugin.application_passwords-delete&appid=' .  $application['app_id']), rcmail::Q($this->gettext('delete')));
             $table->add(array('style' => 'width: 40%'), $application['application']);
             $table->add(array('style' => 'width: 20%'), $application['created']);
-			$table->add(array('style' => 'width: 20%'), $application['lastUsedDateTime']);
+			$table->add(array('style' => 'width: 20%'), $application['lastlogin']);
             $table->add(array('style' => 'width: 20%'), $link_delete);
         }
 
@@ -228,7 +228,7 @@ class application_passwords extends rcube_plugin
 		// at least we should always have the local part
         $sql = $this->_parse_sql($db, $sql, '%l', $local_part);
         $sql = $this->_parse_sql($db, $sql, '%d', $domain_part);
-        $sql = $this->_parse_sql($db, $sql, '%p', $password);
+        $sql = $this->_parse_sql($db, $sql, '%p', str_replace(' ','',$password));
 		$sql = $this->_parse_sql($db, $sql, '%s', $salt);
         $sql = $this->_parse_sql($db, $sql, '%a', $application);
  

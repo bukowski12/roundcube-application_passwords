@@ -1,9 +1,9 @@
 CREATE TABLE `app_user` (
 	`user_id` int(10) unsigned NOT NULL,
-	`badPasswordCount` int(11) unsigned NOT NULL DEFAULT '0',
-	`badPasswordDateTime` datetime DEFAULT NULL,
-	`lastLoginDateTime` datetime DEFAULT NULL,
-	`isLockedOut` bit(1) NOT NULL DEFAULT b'0',
+	`badpasswordcount` int(11) unsigned NOT NULL DEFAULT '0',
+	`lastbadpassword` datetime DEFAULT NULL,
+	`lastlogin` datetime DEFAULT NULL,
+	`islockedout` bit(1) NOT NULL DEFAULT b'0',
 	PRIMARY KEY (`user_id`),
 	CONSTRAINT user_id_fk_app_users FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -15,8 +15,8 @@ CREATE TABLE `app_password` (
 	`password` varchar(255) DEFAULT NULL,
 	`created` datetime NOT NULL,
 	`salt` varchar(16) DEFAULT NULL,
-	`lastUsedDateTime` datetime NULL,
-	`lastRemoteAddress` varchar(100) NULL,
+	`lastlogin` datetime NULL,
+	`lastaddress` varchar(100) NULL,
 	PRIMARY KEY (`app_id`),
 	CONSTRAINT user_id_fk_app_password FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -27,7 +27,7 @@ CREATE TABLE `app_log` (
 	`username` varchar(128) NULL,
 	`user_id` int(11) NULL,
 	`service` varchar(100) NULL,
-	`remoteAddress` varchar(100) NULL,	
+	`remoteaddress` varchar(100) NULL,	
 	`message` nvarchar(1000) NOT NULL,
 	PRIMARY KEY (`log_id`)
 );
