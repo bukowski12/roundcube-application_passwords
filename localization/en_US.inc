@@ -15,6 +15,8 @@ $labels['new_application_step2_description'] = 'You may now enter your new appli
 
 // Used in listing of existing passwords
 $labels['existing_application_passwords'] = 'Existing Passwords';
-$labels['applications'] = 'Your application-specific passwords';
+$labels['applications'] = 'Application';
 $labels['date_created'] = 'Creation date';
+$labels['date_last_used'] = 'Last used date';
+$labels['delete_warning'] = 'Warning! Deleting an application password will prevent any applications using it from access your mailbox.';
 ?>

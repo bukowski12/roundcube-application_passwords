@@ -94,20 +94,26 @@ class application_passwords extends rcube_plugin
         $rcmail->output->add_gui_object('new_application_form', 'new_application_form');
 
         // This creates the list of existing application specific passwords
-        $table = new html_table(array('id' => 'existing_applications', 'class' => 'propform', 'cellspacing' => '0', 'cols' => 3));
-        $table->add_header(array('class' => 'title'), '<b>' . rcmail::Q($this->gettext('applications')) . '</b>');
-        $table->add_header(array('class' => 'title'), '<b>' . rcmail::Q($this->gettext('date_created')) . '</b>');
-        $table->add_header(array('class' => 'title'), '&nbsp;');
+        $table = new html_table(array('id' => 'existing_applications', 'class' => 'propform', 'cellspacing' => '0', 'cols' => 4));
+        $table->add_header(array('class' => 'title', 'style' => 'width: 40%'), '<b>' . rcmail::Q($this->gettext('applications')) . '</b>');
+        $table->add_header(array('class' => 'title', 'style' => 'width: 20%'), '<b>' . rcmail::Q($this->gettext('date_created')) . '</b>');
+		$table->add_header(array('class' => 'title', 'style' => 'width: 20%'), '<b>' . rcmail::Q($this->gettext('date_last_used')) . '</b>');
+        $table->add_header(array('class' => 'title', 'style' => 'width: 20%'), '&nbsp;');
 
         // REPLACE WITH SQL QUERY CODE
         $applications = $this->_get_applications();
 
         foreach ($applications as $application)
         {
-            $link_delete = html::tag('a', array('href' => '?_task=settings&_action=plugin.application_passwords-delete&appid=' .  $application['appid']), rcmail::Q($this->gettext('delete')));
-            $table->add(null, $application['application']);
-            $table->add(null, $application['created']);
-            $table->add(null, $link_delete);
+			$onclick='';
+			if ($application['lastUsedDateTime']){
+				$onclick = 'return confirm("'.$this->gettext('delete_warning').'")';
+			}
+            $link_delete = html::tag('a', array('onclick'=>$onclick,'href' => '?_task=settings&_action=plugin.application_passwords-delete&appid=' .  $application['app_id']), rcmail::Q($this->gettext('delete')));
+            $table->add(array('style' => 'width: 40%'), $application['application']);
+            $table->add(array('style' => 'width: 20%'), $application['created']);
+			$table->add(array('style' => 'width: 20%'), $application['lastUsedDateTime']);
+            $table->add(array('style' => 'width: 20%'), $link_delete);
         }
 
         $section_existing = html::div(array('id' => 'existing_application_passwords', 'class' => 'boxcontent propform'),
@@ -128,7 +134,9 @@ class application_passwords extends rcube_plugin
                       $rcmail->output->form_tag(array('id' => 'application_confirmation_form', 'class' => 'propform', 'name' => 'application_confirmation_form', 'method' => 'post', 'action' => './?_task=settings&_action=plugin.application_passwords'),
                           html::tag('fieldset', null, html::tag('legend', null, rcmail::Q($this->gettext('new_application_step2_legend'))) .
                               html::p(null, rcmail::Q($this->gettext('new_application_step2_description'))) .
-                              html::p(array('style' => 'text-align: center; font-size: 200%; letter-spacing: 2px; font-family: monospace;'), $this->password) .
+							  html::div(null, 
+								html::p(array('style' => 'text-align: center; font-size: 200%; letter-spacing: 2px; font-family: monospace; background-color: #efefef; padding: 5px;'), $this->password)  
+							  ) .
                               html::tag('input', array('type' => 'submit', 'id' => '', 'class' => 'button mainaction', 'value' => rcmail::Q($this->gettext('back'))))
                           )
                       )
@@ -163,10 +171,11 @@ class application_passwords extends rcube_plugin
             return False;
         }
 
+		$user_id = $rcmail->user->ID;
         $local_part  = $rcmail->user->get_username('local');
         $domain_part = $rcmail->user->get_username('domain');
 
-
+		$sql = $this->_parse_sql($db, $sql, '%u', $user_id);
         // at least we should always have the local part
         $sql = $this->_parse_sql($db, $sql, '%l', $local_part);
         $sql = $this->_parse_sql($db, $sql, '%d', $domain_part);
@@ -207,21 +216,16 @@ class application_passwords extends rcube_plugin
         if ($db->is_error()) {
             return False;
         }
-
+		$user_id = $rcmail->user->ID;
         $local_part  = $rcmail->user->get_username('local');
         $domain_part = $rcmail->user->get_username('domain');
-		
-		//Restrict the character set used as salt (#1488136)
-		$seedchars = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';		
-		
-		//Generate an 8 character salt
+	
+		//Generate an 8 byte salt
 		//TODO: Make this a config setting (length)
-		for ($i = 0; $i < 8 ; $i++) {
-			//TODO: is php rand() a CSRNG? I suspect is is not.
-			$salt .= $seedchars[rand(0, 63)];
-		}
-		
-        // at least we should always have the local part
+		$salt = bin2hex(openssl_random_pseudo_bytes(8));
+		        
+		$sql = $this->_parse_sql($db, $sql, '%u', $user_id);
+		// at least we should always have the local part
         $sql = $this->_parse_sql($db, $sql, '%l', $local_part);
         $sql = $this->_parse_sql($db, $sql, '%d', $domain_part);
         $sql = $this->_parse_sql($db, $sql, '%p', $password);
@@ -243,13 +247,11 @@ class application_passwords extends rcube_plugin
             }
         }
 
-        return False;
-
+        return false;
     }
 
     private function _delete($appid)
-    {
-    
+    {    
         $rcmail = rcmail::get_instance();
        
         if (!($sql = $rcmail->config->get('application_passwords_delete_query'))) {
@@ -274,10 +276,12 @@ class application_passwords extends rcube_plugin
             return False;
         }
 
+		$user_id = $rcmail->user->ID;
         $local_part  = $rcmail->user->get_username('local');
         $domain_part = $rcmail->user->get_username('domain');
 
         // at least we should always have the local part
+		$sql = $this->_parse_sql($db, $sql, '%u', $user_id);
         $sql = $this->_parse_sql($db, $sql, '%l', $local_part);
         $sql = $this->_parse_sql($db, $sql, '%d', $domain_part);
         $sql = $this->_parse_sql($db, $sql, '%p', $password);
@@ -306,115 +310,7 @@ class application_passwords extends rcube_plugin
     {
         $rcmail = rcmail::get_instance();
 		
-        // crypted password
-        if ( ($var == '%c') && (strpos($sql, '%c') !== FALSE) ) {
-            $salt = '';
-
-            if (!($crypt_hash = $rcmail->config->get('application_passwords_crypt_hash')))
-            {
-                if (CRYPT_MD5)
-                    $crypt_hash = 'md5';
-                else if (CRYPT_STD_DES)
-                    $crypt_hash = 'des';
-            }
-
-            switch ($crypt_hash)
-            {
-            case 'md5':
-                $len = 8;
-                $salt_hashindicator = '$1$';
-                break;
-            case 'des':
-                $len = 2;
-                break;
-            case 'blowfish':
-                $len = 22;
-                $salt_hashindicator = '$2a$';
-                break;
-            case 'sha256':
-                $len = 16;
-                $salt_hashindicator = '$5$';
-                break;
-            case 'sha512':
-                $len = 16;
-                $salt_hashindicator = '$6$';
-                break;
-            default:
-                return False;
-            }
-        
-            for ($i = 0; $i < $len ; $i++) {
-                $salt .= $seedchars[rand(0, 63)];
-            }
-
-            $sql = str_replace('%c',  $db->quote(crypt($val, $salt_hashindicator ? $salt_hashindicator .$salt.'$' : $salt)), $sql);
-        }
-
-        // dovecotpw
-        if ( ($var == '%D') && (strpos($sql, '%D') !== FALSE) ) {
-            if (!($dovecotpw = $rcmail->config->get('application_passwords_dovecotpw')))
-                $dovecotpw = 'dovecotpw';
-            if (!($method = $rcmail->config->get('application_passwords_dovecotpw_method')))
-                $method = 'CRAM-MD5';
-
-            // use common temp dir
-            $tmp_dir = $rcmail->config->get('temp_dir');
-            $tmpfile = tempnam($tmp_dir, 'roundcube-');
-
-            $pipe = popen("$dovecotpw -s '$method' > '$tmpfile'", "w");
-            if (!$pipe) {
-                unlink($tmpfile);
-                return False;
-            }
-            else {
-                fwrite($pipe, $passwd . "\n", 1+strlen($val)); usleep(1000);
-                fwrite($pipe, $passwd . "\n", 1+strlen($val));
-                pclose($pipe);
-                $newval = trim(file_get_contents($tmpfile), "\n");
-                if (!preg_match('/^\{' . $method . '\}/', $newval)) {
-                    return False;
-                }
-                if (!$rcmail->config->get('application_passwords_dovecotpw_with_method'))
-                    $newval = trim(str_replace('{' . $method . '}', '', $newval));
-                unlink($tmpfile);
-            }
-            $sql = str_replace('%D', $db->quote($newval), $sql);
-        }
-
-        // hashed passwords
-        if ( ($var == '%n') && (strpos($sql, '%n') !== FALSE) ) {
-            if (!extension_loaded('hash')) {
-                rcube::raise_error(array(
-                    'code' => 600,
-                    'type' => 'php',
-                    'file' => __FILE__, 'line' => __LINE__,
-                    'message' => "Password plugin: 'hash' extension not loaded!"
-                ), true, false);
-
-                return False;
-            }
-
-            if (!($hash_algo = strtolower($rcmail->config->get('application_passwords_hash_algorithm'))))
-                $hash_algo = 'sha1';
-
-            $hash_passwd = hash($hash_algo, $val);
-
-            if ($rcmail->config->get('application_passwords_hash_base64')) {
-                $hash_passwd = base64_encode(pack('H*', $hash_passwd));
-            }
-			
-			$salt = '';
-			$len = 16;
-			
-			for ($i = 0; $i < $len ; $i++) {
-                $salt .= $seedchars[rand(0, 63)];
-            }
-
-            $sql = str_replace('%n', $db->quote($hash_passwd, 'text'), $sql);
-			$sql = str_replace('%s', $db->quote($salt, 'text'), $sql);
-        }
-
-        // Handle clear text values
+		// Handle clear text values
         if ( ($var == '%p') && (strpos($sql, '%p') !== FALSE) ) {
             $sql = str_replace('%p', $db->quote($val, 'text'), $sql);
         }
@@ -429,6 +325,10 @@ class application_passwords extends rcube_plugin
 		
 		if ( ($var == '%i') && (strpos($sql, '%i') !== FALSE) ) {
             $sql = str_replace('%i', $db->quote($val, 'int'), $sql);
+        }
+						
+		if ( ($var == '%u') && (strpos($sql, '%u') !== FALSE) ) {
+            $sql = str_replace('%u', $db->quote($val, 'int'), $sql);
         }
 
         if ( ($var == '%d') && (strpos($sql, '%d') !== FALSE) ) {
@@ -451,9 +351,12 @@ class application_passwords extends rcube_plugin
 
     private function _password()
     {
-        $characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        for ($c = 1; $c <= 16; $c++) {
-            $password .= $characters[rand(0, strlen($characters))];
+		$random = bin2hex(openssl_random_pseudo_bytes(8));
+        for ($c = 0; $c < strlen($random); $c++) {
+            $password .= $random[$c];
+			if (($c+1) % 4 === 0) {
+				$password .= ' ';
+			}
         }
         return $password;
     }

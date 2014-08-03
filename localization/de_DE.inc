@@ -17,7 +17,8 @@ $labels['new_application_step2_description'] = 'Sie können jetzt Ihr neues anwe
 $labels['existing_application_passwords'] = 'Existierende Passwörter';
 $labels['applications'] = 'Ihre anwendungsspezifischen Passwörter';
 $labels['date_created'] = 'Erstellungsdatum';
-
+$labels['date_last_used'] = 'Datum der letzten Verwendung';
+$labels['delete_warning'] = 'Achtung! Das Passwort wird nicht mehr funktionieren.';
 $messages = array();
 
 ?>

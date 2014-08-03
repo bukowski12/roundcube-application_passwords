@@ -22,6 +22,7 @@ $config['application_passwords_db_dsn'] = 'mysql://user:password@localhost/table
 
 // Sample Dovecot password query:
 // password_query = SELECT username, domain, NULL AS password, 'Y' as nopassword FROM app_password WHERE username = '%n' AND password = SHA2(salt+REPLACE('%w',' ',''),"512")
+// password_query = CALL app_authenticate '%n', '%w', '%r', '%s', 'dovecot', 1,;
 
 // SQL query for displaying list of applications for which a password is set
 $config['application_passwords_select_query'] = 'SELECT app_id, application, created FROM app_password WHERE username=%l AND domain=%d';
