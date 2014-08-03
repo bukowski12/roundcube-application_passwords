@@ -33,32 +33,14 @@ $config['application_passwords_insert_query'] = 'INSERT INTO app_password (usern
 // SQL query for deleting an application-specific password
 $config['application_passwords_delete_query'] = 'DELETE FROM app_password WHERE username=%l AND domain=%d AND app_id=%i';
 
-// By default the crypt() function which is used to create the '%c' 
-// parameter uses the md5 algorithm. To use different algorithms 
-// you can choose between: des, md5, blowfish, sha256, sha512.
-// Before using other hash functions than des or md5 please make sure
-// your operating system supports the other hash functions.
-$config['application_passwords_crypt_hash'] = 'md5';
-
 // By default domains in variables are using unicode.
 // Enable this option to use punycoded names
 $config['application_passwords_idn_ascii'] = false;
 
-// Path for dovecotpw (if not in $PATH)
-$config['application_passwords_dovecotpw'] = '/usr/bin/doveadm pw';
+// Show password in blocks of 4 characters separated by spaces
+$config['application_passwords_show_spaces'] = true;
 
-// Dovecot method (dovecotpw -s 'method')
-$config['application_passwords_dovecotpw_method'] = 'SSHA512';
-
-// Enables use of password with crypt method prefix in %D, e.g. {MD5}$1$LUiMYWqx$fEkg/ggr/L6Mb2X7be4i1/
-$config['application_passwords_dovecotpw_with_method'] = true;
-
-// Using a password hash for %n and %q variables.
-// Determine which hashing algorithm should be used to generate
-// the hashed new and current password for using them within the
-// SQL query. Requires PHP's 'hash' extension.
-$config['application_passwords_hash_algorithm'] = 'sha1';
-
-// You can also decide whether the hash should be provided
-// as hex string or in base64 encoded format.
-$config['application_passwords_hash_base64'] = false;
+// Show a QR code that contains the password so it can be scanned for a phone
+// Note: This uses google charts image API, so it sends the password 
+// to Google/NSA/Lizard People over HTTPS.
+$config['application_passwords_show_barcode'] = false;

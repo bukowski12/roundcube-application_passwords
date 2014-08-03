@@ -48,8 +48,8 @@ class application_passwords extends rcube_plugin
         $this->register_handler('plugin.body', array($this, 'application_passwords_step2'));
         $rcmail->output->set_pagetitle(rcmail::Q($this->gettext('application_passwords')));
 
-        $application = rcube_utils::get_input_value('new_application_name', rcube_utils::INPUT_POST, true);
-        $this->password = $this->_password();
+        $application = rcube_utils::get_input_value('new_application_name', rcube_utils::INPUT_POST, true);		
+        $this->password = $this->_password($rcmail->config->get('application_passwords_show_spaces'));	
         $this->_save($application, $this->password);
 
         $rcmail->output->send('plugin');
@@ -135,7 +135,12 @@ class application_passwords extends rcube_plugin
                           html::tag('fieldset', null, html::tag('legend', null, rcmail::Q($this->gettext('new_application_step2_legend'))) .
                               html::p(null, rcmail::Q($this->gettext('new_application_step2_description'))) .
 							  html::div(null, 
-								html::p(array('style' => 'text-align: center; font-size: 200%; letter-spacing: 2px; font-family: monospace; background-color: #efefef; padding: 5px;'), $this->password)  
+								html::p(array('style' => 'text-align: center; font-size: 200%; letter-spacing: 2px; font-family: monospace; background-color: #efefef; padding: 5px;'), $this->password) .
+								($rcmail->config->get('application_passwords_show_barcode') 
+									? html::p(null,
+											html::img(array('src'=>'https://chart.googleapis.com/chart?chs=175x175&chld=M|0&cht=qr&chl='.$this->password, alt=>'password'))
+										)
+									: '')
 							  ) .
                               html::tag('input', array('type' => 'submit', 'id' => '', 'class' => 'button mainaction', 'value' => rcmail::Q($this->gettext('back'))))
                           )
@@ -303,7 +308,7 @@ class application_passwords extends rcube_plugin
             }
         }
 
-       return False;
+       return false;
     }
 
     private function _parse_sql($db, $sql, $var, $val)
@@ -349,12 +354,12 @@ class application_passwords extends rcube_plugin
         return $sql;
     }
 
-    private function _password()
+    private function _password($show_spaces)
     {
 		$random = bin2hex(openssl_random_pseudo_bytes(8));
         for ($c = 0; $c < strlen($random); $c++) {
             $password .= $random[$c];
-			if (($c+1) % 4 === 0) {
+			if ($show_spaces && ($c+1) % 4 === 0) {
 				$password .= ' ';
 			}
         }
