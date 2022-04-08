@@ -48,8 +48,8 @@ class application_passwords extends rcube_plugin
         $this->register_handler('plugin.body', array($this, 'application_passwords_step2'));
         $rcmail->output->set_pagetitle(rcmail::Q($this->gettext('application_passwords')));
 
-        $application = rcube_utils::get_input_value('new_application_name', rcube_utils::INPUT_POST, true);		
-        $this->password = $this->_password($rcmail->config->get('application_passwords_show_spaces'));	
+        $application = rcube_utils::get_input_value('new_application_name', rcube_utils::INPUT_POST, true);
+        $this->password = $this->_password($rcmail->config->get('application_passwords_show_spaces'));
         $this->_save($application, $this->password);
 
         $rcmail->output->send('plugin');
@@ -67,12 +67,13 @@ class application_passwords extends rcube_plugin
 
         $rcmail->output->send('plugin');
     }
-	
+
     function application_passwords_form() 
     {
         $rcmail = rcmail::get_instance();
         
-        $title = html::tag('h1',array('class' => 'boxtitle'), rcmail::Q($this->gettext('application_passwords')));
+//        $title = html::tag('h1',array('class' => 'boxtitle'), rcmail::Q($this->gettext('application_passwords')));
+        $title = html::tag('legend', null, $this->gettext('application_passwords'));
 
         // This creates the form for creating new application specific passwords
         $table = new html_table(array('id' => 'new_application', 'class' => 'propform', 'cellspacing' => '0', 'cols' => 3));
@@ -94,61 +95,64 @@ class application_passwords extends rcube_plugin
         $rcmail->output->add_gui_object('new_application_form', 'new_application_form');
 
         // This creates the list of existing application specific passwords
-        $table = new html_table(array('id' => 'existing_applications', 'class' => 'propform', 'cellspacing' => '0', 'cols' => 4));
-        $table->add_header(array('class' => 'title', 'style' => 'width: 40%'), '<b>' . rcmail::Q($this->gettext('applications')) . '</b>');
-        $table->add_header(array('class' => 'title', 'style' => 'width: 20%'), '<b>' . rcmail::Q($this->gettext('date_created')) . '</b>');
-		$table->add_header(array('class' => 'title', 'style' => 'width: 20%'), '<b>' . rcmail::Q($this->gettext('date_last_used')) . '</b>');
-        $table->add_header(array('class' => 'title', 'style' => 'width: 20%'), '&nbsp;');
+        $table = new html_table(array('id' => 'existing_applications', 'class' => 'table-responsive', 'cellspacing' => '0', 'cols' => 4));
+        $table->add_header(array('class' => 'title'), '<b>' . rcmail::Q($this->gettext('applications')) . '</b>');
+        $table->add_header(array('class' => 'title'), '<b>' . rcmail::Q($this->gettext('date_created')) . '</b>');
+        $table->add_header(array('class' => 'title'), '<b>' . rcmail::Q($this->gettext('date_last_used')) . '</b>');
+        $table->add_header(array('class' => 'title'), '&nbsp;');
 
         // REPLACE WITH SQL QUERY CODE
         $applications = $this->_get_applications();
 
         foreach ($applications as $application)
         {
-			$onclick='';
-			if ($application['lastlogin']){
-				$onclick = 'return confirm("'.$this->gettext('delete_warning').'")';
-			}
+                        $onclick='';
+                        if ($application['lastlogin']){
+                                $onclick = 'return confirm("'.$this->gettext('delete_warning').'")';
+                        }
             $link_delete = html::tag('a', array('onclick'=>$onclick,'href' => '?_task=settings&_action=plugin.application_passwords-delete&appid=' .  $application['app_id']), rcmail::Q($this->gettext('delete')));
-            $table->add(array('style' => 'width: 40%'), $application['application']);
-            $table->add(array('style' => 'width: 20%'), $application['created']);
-			$table->add(array('style' => 'width: 20%'), $application['lastlogin']);
-            $table->add(array('style' => 'width: 20%'), $link_delete);
+            $table->add(null, $application['application']);
+            $table->add(null, $application['created']);
+            $table->add(null, $application['lastlogin']);
+            $table->add(null, $link_delete);
         }
 
         $section_existing = html::div(array('id' => 'existing_application_passwords', 'class' => 'boxcontent propform'),
                                 html::tag('fieldset', null, html::tag('legend', null, rcmail::Q($this->gettext('existing_application_passwords'))) . $table->show())
                             );
 
-        return ($title . $section_new . $section_existing);
+//        return ($title . $section_new . $section_existing);
+        return ("<div class='formcontent'>" . $title . $section_new . $section_existing . "</div>");
     }
-
 
     function application_passwords_step2() 
     {
         $rcmail = rcmail::get_instance();
 
-        $title = html::tag('h1',array('class' => 'boxtitle'), rcmail::Q($this->gettext('application_passwords')));
+//        $title = html::tag('h1',array('class' => 'boxtitle'), rcmail::Q($this->gettext('application_passwords')));
+        $title = html::tag('legend', null, $this->gettext('application_passwords'));
 
         $output = html::div(array('id' => 'existing_application_passwords', 'class' => 'boxcontent'),
                       $rcmail->output->form_tag(array('id' => 'application_confirmation_form', 'class' => 'propform', 'name' => 'application_confirmation_form', 'method' => 'post', 'action' => './?_task=settings&_action=plugin.application_passwords'),
                           html::tag('fieldset', null, html::tag('legend', null, rcmail::Q($this->gettext('new_application_step2_legend'))) .
                               html::p(null, rcmail::Q($this->gettext('new_application_step2_description'))) .
-							  html::div(null, 
-								html::p(array('style' => 'text-align: center; font-size: 200%; letter-spacing: 2px; font-family: monospace; background-color: #efefef; padding: 5px;'), $this->password) .
-								($rcmail->config->get('application_passwords_show_barcode') 
-									? html::p(null,
-											html::img(array('src'=>'https://chart.googleapis.com/chart?chs=175x175&chld=M|0&cht=qr&chl='.$this->password, alt=>'password'))
-										)
-									: '')
-							  ) .
+                                                          html::div(null, 
+                                                                html::p(array('style' => 'text-align: center; font-size: 200%; letter-spacing: 2px; font-family: monospace; background-color: #efefef; padding: 5px;'), $this->password) .
+                                                                ($rcmail->config->get('application_passwords_show_barcode') 
+                                                                        ? html::p(null,
+                                                                                        html::img(array('src'=>'https://chart.googleapis.com/chart?chs=175x175&chld=M|0&cht=qr&chl='.$this->password, alt=>'password'))
+                                                                                )
+                                                                        : '')
+                                                          ) .
                               html::tag('input', array('type' => 'submit', 'id' => '', 'class' => 'button mainaction', 'value' => rcmail::Q($this->gettext('back'))))
                           )
                       )
                   );
         $rcmail->output->add_gui_object('application_confirmation_form', 'application_confirmation_form');
  
-        return ($title . $output);
+//      return ($title . $output);
+        return ("<div class='formcontent'>" . $title . $output . "</div>");
+
     }
 
     private function _get_applications()
@@ -176,11 +180,11 @@ class application_passwords extends rcube_plugin
             return False;
         }
 
-		$user_id = $rcmail->user->ID;
+        $user_id = $rcmail->user->ID;
         $local_part  = $rcmail->user->get_username('local');
         $domain_part = $rcmail->user->get_username('domain');
 
-		$sql = $this->_parse_sql($db, $sql, '%u', $user_id);
+        $sql = $this->_parse_sql($db, $sql, '%u', $user_id);
         // at least we should always have the local part
         $sql = $this->_parse_sql($db, $sql, '%l', $local_part);
         $sql = $this->_parse_sql($db, $sql, '%d', $domain_part);
@@ -221,20 +225,20 @@ class application_passwords extends rcube_plugin
         if ($db->is_error()) {
             return False;
         }
-		$user_id = $rcmail->user->ID;
+                $user_id = $rcmail->user->ID;
         $local_part  = $rcmail->user->get_username('local');
         $domain_part = $rcmail->user->get_username('domain');
-	
-		//Generate an 8 byte salt
-		//TODO: Make this a config setting (length)
-		$salt = bin2hex(openssl_random_pseudo_bytes(8));
-		        
-		$sql = $this->_parse_sql($db, $sql, '%u', $user_id);
-		// at least we should always have the local part
+
+                //Generate an 8 byte salt
+                //TODO: Make this a config setting (length)
+                $salt = bin2hex(openssl_random_pseudo_bytes(8));
+                        
+                $sql = $this->_parse_sql($db, $sql, '%u', $user_id);
+                // at least we should always have the local part
         $sql = $this->_parse_sql($db, $sql, '%l', $local_part);
         $sql = $this->_parse_sql($db, $sql, '%d', $domain_part);
         $sql = $this->_parse_sql($db, $sql, '%p', str_replace(' ','',$password));
-		$sql = $this->_parse_sql($db, $sql, '%s', $salt);
+                $sql = $this->_parse_sql($db, $sql, '%s', $salt);
         $sql = $this->_parse_sql($db, $sql, '%a', $application);
  
         $res = $db->query($sql);
@@ -281,17 +285,17 @@ class application_passwords extends rcube_plugin
             return False;
         }
 
-		$user_id = $rcmail->user->ID;
+                $user_id = $rcmail->user->ID;
         $local_part  = $rcmail->user->get_username('local');
         $domain_part = $rcmail->user->get_username('domain');
 
         // at least we should always have the local part
-		$sql = $this->_parse_sql($db, $sql, '%u', $user_id);
+                $sql = $this->_parse_sql($db, $sql, '%u', $user_id);
         $sql = $this->_parse_sql($db, $sql, '%l', $local_part);
         $sql = $this->_parse_sql($db, $sql, '%d', $domain_part);
         $sql = $this->_parse_sql($db, $sql, '%p', $password);
         $sql = $this->_parse_sql($db, $sql, '%a', $application);
-		$sql = $this->_parse_sql($db, $sql, '%i', $appid);
+                $sql = $this->_parse_sql($db, $sql, '%i', $appid);
  
         $db->query($sql);
 
@@ -314,25 +318,25 @@ class application_passwords extends rcube_plugin
     private function _parse_sql($db, $sql, $var, $val)
     {
         $rcmail = rcmail::get_instance();
-		
-		// Handle clear text values
+
+                // Handle clear text values
         if ( ($var == '%p') && (strpos($sql, '%p') !== FALSE) ) {
             $sql = str_replace('%p', $db->quote($val, 'text'), $sql);
         }
-		
-		if ( ($var == '%s') && (strpos($sql, '%s') !== FALSE) ) {
+
+                if ( ($var == '%s') && (strpos($sql, '%s') !== FALSE) ) {
             $sql = str_replace('%s', $db->quote($val, 'text'), $sql);
         }
 
         if ( ($var == '%l') && (strpos($sql, '%l') !== FALSE) ) {
             $sql = str_replace('%l', $db->quote($val, 'text'), $sql);
         }
-		
-		if ( ($var == '%i') && (strpos($sql, '%i') !== FALSE) ) {
+
+                if ( ($var == '%i') && (strpos($sql, '%i') !== FALSE) ) {
             $sql = str_replace('%i', $db->quote($val, 'int'), $sql);
         }
-						
-		if ( ($var == '%u') && (strpos($sql, '%u') !== FALSE) ) {
+
+                if ( ($var == '%u') && (strpos($sql, '%u') !== FALSE) ) {
             $sql = str_replace('%u', $db->quote($val, 'int'), $sql);
         }
 
@@ -356,12 +360,12 @@ class application_passwords extends rcube_plugin
 
     private function _password($show_spaces)
     {
-		$random = bin2hex(openssl_random_pseudo_bytes(8));
+                $random = bin2hex(openssl_random_pseudo_bytes(8));
         for ($c = 0; $c < strlen($random); $c++) {
             $password .= $random[$c];
-			if ($show_spaces && ($c+1) % 4 === 0) {
-				$password .= ' ';
-			}
+                        if ($show_spaces && ($c+1) % 4 === 0) {
+                                $password .= ' ';
+                        }
         }
         return $password;
     }

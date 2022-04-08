@@ -21,17 +21,17 @@ $config['application_passwords_db_dsn'] = 'mysql://user:password@localhost/table
 // CREATE TABLE app_password (app_id int NOT NULL AUTO_INCREMENT KEY, application varchar(100) NOT NULL, username varchar(100) NOT NULL, domain varchar(100) NOT NULL, salt varchar(16) NULL, password varchar(100) NULL, created datetime);
 
 // Sample Dovecot password query:
-// password_query = SELECT username, domain, NULL AS password, 'Y' as nopassword FROM app_password WHERE username = '%n' AND password = SHA2(salt+REPLACE('%w',' ',''),"512")
+// password_query = SELECT username, domain, NULL AS password, 'Y' as nopassword FROM app_password WHERE username = '%n' AND password = SHA2(CONCAT (salt,REPLACE('%w',' ','')),512)
 // password_query = CALL app_authenticate '%n', '%w', '%r', '%s', 'dovecot', 1,;
 
 // SQL query for displaying list of applications for which a password is set
-$config['application_passwords_select_query'] = 'SELECT app_id, application, created FROM app_password WHERE username=%l AND domain=%d';
+$config['application_passwords_select_query'] = 'SELECT app_id, application, created, lastlogin FROM app_password WHERE user_id=%u';
 
 // SQL query for storing new application-specific password
-$config['application_passwords_insert_query'] = 'INSERT INTO app_password (username, domain, application, salt, password, created) VALUES (%l, %d, %a, %s, SHA2(%s+%p,"256"), now())';
+$config['application_passwords_insert_query'] = 'INSERT INTO app_password (user_id, application, salt, password, created) VALUES (%u, %a, %s, SHA2(CONCAT(%s,%p), 512), now())';
 
 // SQL query for deleting an application-specific password
-$config['application_passwords_delete_query'] = 'DELETE FROM app_password WHERE username=%l AND domain=%d AND app_id=%i';
+$config['application_passwords_delete_query'] = 'DELETE FROM app_password WHERE user_id=%u AND app_id=%i';
 
 // By default domains in variables are using unicode.
 // Enable this option to use punycoded names

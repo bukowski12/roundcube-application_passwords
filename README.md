@@ -36,7 +36,7 @@ Rename the application_passwords config.inc.php.dist file to config.inc.php and 
 $config['application_passwords_select_query'] = 'SELECT app_id, application, created, lastlogin FROM app_password WHERE username=%l';
 
 // SQL query for storing new application-specific password
-$config['application_passwords_insert_query'] = 'INSERT INTO app_password (username, application, password, salt, created, lastlogin) VALUES (%l, %a, SHA2(CONCAT(%p+%s),"512"), %s, now())';
+$config['application_passwords_insert_query'] = 'INSERT INTO app_password (username, application, password, salt, created, lastlogin) VALUES (%l, %a, SHA2(CONCAT(%s+%p),512), %s, now())';
 
 // SQL query for deleting an application-specific password
 $config['application_passwords_delete_query'] = 'DELETE FROM app_password WHERE username=%l AND app_id=%i';
@@ -59,7 +59,7 @@ Configure a Dovecot Authentcation database to validate passwords.
 driver = mysql
 connect = "host=localhost dbname=roundcube user=dovecot password=password"
 default_pass_scheme = PLAIN
-password_query = SELECT username, NULL AS password, 'Y' as nopassword FROM app_password WHERE username = '%n' AND password = SHA2(CONCAT(salt,'%w'),"512")
+password_query = SELECT username, NULL AS password, 'Y' as nopassword FROM app_password WHERE username = '%n' AND password = SHA2(CONCAT(salt,'%w'),512)
 ```
 
 See http://wiki.dovecot.org/AuthDatabase/SQL for more information on Dovecot Authentication Databases.
@@ -68,7 +68,7 @@ For a more complete example demonstrating account lockout, basic logging, etc. l
 
 Notes
 -----
-Tested with RoundCube 1.0.1 on Debian Wheezy (PHP 5.4.4, MySQL 5.5.37)
+Tested with RoundCube 1.4.13 on Centos (PHP 7.4.19, MySQL 5.5.5-10.3.28-MariaDB)
 Parts of the code was taken from Aleksander Machniak's Password Plugin for 
 Roundcube and the author was inspired by Google's implementation of 
 application-specific passwords.
