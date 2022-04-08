@@ -72,7 +72,6 @@ class application_passwords extends rcube_plugin
     {
         $rcmail = rcmail::get_instance();
         
-//        $title = html::tag('h1',array('class' => 'boxtitle'), rcmail::Q($this->gettext('application_passwords')));
         $title = html::tag('legend', null, $this->gettext('application_passwords'));
 
         // This creates the form for creating new application specific passwords
@@ -121,7 +120,6 @@ class application_passwords extends rcube_plugin
                                 html::tag('fieldset', null, html::tag('legend', null, rcmail::Q($this->gettext('existing_application_passwords'))) . $table->show())
                             );
 
-//        return ($title . $section_new . $section_existing);
         return ("<div class='formcontent'>" . $title . $section_new . $section_existing . "</div>");
     }
 
@@ -129,7 +127,6 @@ class application_passwords extends rcube_plugin
     {
         $rcmail = rcmail::get_instance();
 
-//        $title = html::tag('h1',array('class' => 'boxtitle'), rcmail::Q($this->gettext('application_passwords')));
         $title = html::tag('legend', null, $this->gettext('application_passwords'));
 
         $output = html::div(array('id' => 'existing_application_passwords', 'class' => 'boxcontent'),
@@ -150,7 +147,6 @@ class application_passwords extends rcube_plugin
                   );
         $rcmail->output->add_gui_object('application_confirmation_form', 'application_confirmation_form');
  
-//      return ($title . $output);
         return ("<div class='formcontent'>" . $title . $output . "</div>");
 
     }
